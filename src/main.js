@@ -384,10 +384,30 @@ class GameScene {
   }
 }
 const canvas = document.querySelector("#game-canvas"), scene = new GameScene(), engine = new Engine(canvas, scene, GAME.width, GAME.height);
+const isMobile = window.matchMedia?.("(pointer: coarse)").matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const fullscreenTarget = document.querySelector(".shell");
+function updateStartPrompt() {
+  if (scene.mode === "ready" && isMobile) {
+    ui.description.textContent = "Para uma experiência melhor, jogue em tela cheia. Deslize para mover a galinha e toque para avançar.";
+    ui.start.textContent = document.fullscreenElement ? "COMEÇAR JOGO →" : "TELA CHEIA E JOGAR →";
+  }
+}
+async function startFromButton() {
+  if (isMobile && !document.fullscreenElement && fullscreenTarget.requestFullscreen) {
+    try {
+      await fullscreenTarget.requestFullscreen();
+    } catch (error) {
+      // Fullscreen can be unavailable or denied; the game remains playable.
+    }
+  }
+  scene.start();
+}
 scene.onError = showRuntimeError;
 scene.attach(engine);
 engine.start();
-ui.start.addEventListener("click", () => scene.start());
+ui.start.addEventListener("click", startFromButton);
+document.addEventListener("fullscreenchange", updateStartPrompt);
+updateStartPrompt();
 document.querySelectorAll("[data-move]").forEach((button) => {
   button.addEventListener("pointerdown", (event) => {
     event.preventDefault();
@@ -398,6 +418,23 @@ document.querySelectorAll("[data-move]").forEach((button) => {
   for (const name of ["pointerup", "pointercancel", "pointerleave"]) button.addEventListener(name, () => button.classList.remove("pressed"));
 });
 window.addEventListener("keydown", (event) => scene.onKey(event));
+let touchStart = null;
+canvas.addEventListener("pointerdown", (event) => {
+  if (event.pointerType !== "touch" || scene.mode !== "playing") return;
+  touchStart = { id: event.pointerId, x: event.clientX, y: event.clientY };
+});
+canvas.addEventListener("pointerup", (event) => {
+  if (!touchStart || touchStart.id !== event.pointerId) return;
+  const dx = event.clientX - touchStart.x, dy = event.clientY - touchStart.y;
+  touchStart = null;
+  if (Math.hypot(dx, dy) < 18) {
+    scene.move("up");
+    return;
+  }
+  if (Math.abs(dx) > Math.abs(dy)) scene.move(dx < 0 ? "left" : "right");
+  else scene.move(dy < 0 ? "up" : "down");
+});
+canvas.addEventListener("pointercancel", () => { touchStart = null; });
 document.querySelector("#sound").addEventListener("click", (event) => {
   audio.setMuted(!audio.muted);
   event.currentTarget.textContent = `SOM: ${audio.muted ? "DESLIGADO" : "LIGADO"}`;

@@ -385,29 +385,47 @@ class GameScene {
 }
 const canvas = document.querySelector("#game-canvas"), scene = new GameScene(), engine = new Engine(canvas, scene, GAME.width, GAME.height);
 const isMobile = window.matchMedia?.("(pointer: coarse)").matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-const fullscreenTarget = document.querySelector(".shell");
-function updateStartPrompt() {
-  if (scene.mode === "ready" && isMobile) {
-    ui.description.textContent = "Para uma experiência melhor, jogue em tela cheia. Deslize para mover a galinha e toque para avançar.";
-    ui.start.textContent = document.fullscreenElement ? "COMEÇAR JOGO →" : "TELA CHEIA E JOGAR →";
-  }
+const fullscreenTarget = document.documentElement;
+const fullscreenButtons = document.querySelectorAll("[data-fullscreen]");
+const fullscreenStatus = document.querySelector("#fullscreen-status");
+const activeFullscreen = () => document.fullscreenElement || document.webkitFullscreenElement;
+function updateFullscreenButtons() {
+  const active = Boolean(activeFullscreen());
+  fullscreenButtons.forEach((button) => {
+    button.textContent = active ? "↙ SAIR DA TELA CHEIA" : "⛶ TELA CHEIA";
+    button.setAttribute("aria-pressed", String(active));
+  });
 }
-async function startFromButton() {
-  if (isMobile && !document.fullscreenElement && fullscreenTarget.requestFullscreen) {
-    try {
-      await fullscreenTarget.requestFullscreen();
-    } catch (error) {
-      // Fullscreen can be unavailable or denied; the game remains playable.
+async function toggleFullscreen() {
+  fullscreenStatus.hidden = true;
+  try {
+    if (activeFullscreen()) {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen;
+      await exit.call(document);
+    } else {
+      const enter = fullscreenTarget.requestFullscreen || fullscreenTarget.webkitRequestFullscreen;
+      if (!enter) {
+        fullscreenStatus.textContent = "Este navegador não oferece tela cheia. No iPhone, use Compartilhar → Adicionar à Tela de Início e abra o jogo por lá.";
+        fullscreenStatus.hidden = false;
+        return;
+      }
+      await enter.call(fullscreenTarget);
     }
+  } catch {
+    fullscreenStatus.textContent = "Não foi possível ativar a tela cheia. Tente novamente ou abra o jogo diretamente no navegador.";
+    fullscreenStatus.hidden = false;
   }
-  scene.start();
+  updateFullscreenButtons();
 }
 scene.onError = showRuntimeError;
 scene.attach(engine);
 engine.start();
-ui.start.addEventListener("click", startFromButton);
-document.addEventListener("fullscreenchange", updateStartPrompt);
-updateStartPrompt();
+ui.start.addEventListener("click", () => scene.start());
+fullscreenButtons.forEach((button) => button.addEventListener("click", toggleFullscreen));
+document.addEventListener("fullscreenchange", updateFullscreenButtons);
+document.addEventListener("webkitfullscreenchange", updateFullscreenButtons);
+updateFullscreenButtons();
+if (isMobile) document.querySelector(".hint").innerHTML = "TOQUE PARA AVANÇAR · DESLIZE PARA MOVER<br>NO RIO, PULE NOS TRONCOS";
 document.querySelectorAll("[data-move]").forEach((button) => {
   button.addEventListener("pointerdown", (event) => {
     event.preventDefault();

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#17102c">
+  <meta name="description" content="Jogo oficial da Calabrejada XVI. Colete 16 itens e compartilhe o resultado.">
+  <title>Calabrejada XVI — Nostra Run</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./src/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topline"><div class="brand">NOSTRA RUN</div><div class="tag">CALABREJADA · EDIÇÃO XVI</div></header>
+    <section class="stats" aria-label="Estatísticas da partida">
+      <div class="stat"><div class="label">PONTOS</div><div class="value" id="score">0</div></div>
+      <div class="stat"><div class="label">RECORDE</div><div class="value" id="best">0</div></div>
+      <div class="stat"><div class="label">DISTÂNCIA</div><div class="value"><span id="distance">0</span><small> casas</small></div></div>
+      <div class="stat stat-items"><div class="label">ITENS</div><div class="value"><span id="items">0</span><small> / 16</small></div></div>
+    </section>
+    <section class="game-wrap" aria-label="Jogo Nostra Run da Calabrejada XVI">
+      <div id="game" aria-label="Área do jogo"><canvas id="game-canvas" width="360" height="540" role="img" aria-label="Ajude a galinha a atravessar a rua"></canvas></div>
+      <div class="overlay" id="overlay">
+        <div class="card" id="result-card">
+          <img class="gameover-chicken" id="gameover-chicken" src="./assets/optimized/chicken-gameover.png" alt="Galinha da República Nostravamos" hidden>
+          <div class="eyebrow" id="overline">CALABREJADA · EDIÇÃO XVI</div>
+          <h1 id="headline">PEGUE<br>16 ITENS.</h1>
+          <p id="description">Atravesse a festa, colete os itens e faça a sua melhor marca.</p>
+          <div class="result-stats" id="result-stats" hidden>
+            <span><strong id="result-items">0/16</strong> itens</span>
+            <span><strong id="result-distance">0</strong> casas</span>
+            <span><strong id="result-score">0</strong> pontos</span>
+          </div>
+          <section class="result-partners" id="result-partners" aria-label="Patrocínio e realização" hidden>
+            <div class="partner-heading">PATROCÍNIO E REALIZAÇÃO</div>
+            <div class="partner-grid">
+              <div class="partner-slot"><img id="partner-logo-51" alt="Logo da 51"></div>
+              <div class="partner-slot"><img id="partner-logo-new-age" alt="Logo da NewAge"></div>
+              <div class="partner-slot"><img id="partner-logo-rubao" alt="Logo do Rubao"></div>
+              <div class="partner-slot"><img id="partner-logo-future" src="./assets/optimized/ams-logo.png" alt="Logo da Amsterdam"></div>
+            </div>
+            <div class="partner-error" id="partner-error" role="alert" hidden>Não foi possível carregar as marcas. Toque em baixar para tentar novamente.</div>
+          </section>
+          <div class="share-callout" id="share-callout" hidden>Tire um print ou baixe o resultado e poste no Instagram marcando<br><strong>@repnostravamos</strong> e <strong>@calabrejadadalarapius</strong></div>
+          <div class="card-actions">
+            <button class="button" id="start">VAMOS ATRAVESSAR →</button>
+            <button class="button button-secondary" id="download-result" type="button" hidden>BAIXAR RESULTADO ↓</button>
+          </div>
+          <div class="hint">↑ AVANÇAR · ← → LADOS · ↓ VOLTAR<br>NO RIO, PULE NOS TRONCOS</div>
+        </div>
+      </div>
+    </section>
+    <footer class="below"><span>+18 · BEBA COM MODERAÇÃO</span><span class="motto">META: 16 ITENS</span><button class="sound" id="sound" type="button" aria-pressed="false">SOM: DESLIGADO</button></footer>
+    <nav class="controls" aria-label="Controles de movimento">
+      <button class="control up" data-move="up" aria-label="Avançar">↑</button>
+      <button class="control left" data-move="left" aria-label="Ir para a esquerda">←</button>
+      <button class="control down" data-move="down" aria-label="Voltar">↓</button>
+      <button class="control right" data-move="right" aria-label="Ir para a direita">→</button>
+    </nav>
+    <div class="foot">CALABREJADA XVI · REPÚBLICA NOSTRAVAMOS</div>
+  </main>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

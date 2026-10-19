@@ -1,0 +1,17 @@
+{
+  "name": "cluckrun",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "prepare:art": "node scripts/prepare-art.mjs",
+    "check:game": "node scripts/check-game.mjs",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.55.0",
+    "vite": "6.3.5"
+  }
+}

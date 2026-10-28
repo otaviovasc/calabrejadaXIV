@@ -223,6 +223,7 @@ export function renderScene(ctx, scene) {
     }
     if (row.grain&&!row.grain.collected) objects.push({y:project(row.grain.x,row.lane,scene.worldProgress).y+.5,draw:()=>drawPickup(ctx,scene,row)});
   }
+  scene.effects?.drawWorld(ctx, project, scene.worldProgress);
   const player = project(scene.playerX, scene.worldProgress, scene.worldProgress);
   player.y-=playerHeight(scene);
   objects.push({y:player.y+1,draw:()=>{
@@ -239,6 +240,7 @@ export function renderScene(ctx, scene) {
     ctx.lineWidth=5;ctx.strokeStyle='#26152d';ctx.strokeText(scene.message,180,scene.messageY);
     ctx.fillStyle='#fff1dc';ctx.fillText(scene.message,180,scene.messageY);ctx.restore();
   }
+  scene.effects?.drawCelebration(ctx);
   if(scene.flash>0){ctx.fillStyle=`rgba(255,220,195,${scene.flash})`;ctx.fillRect(0,0,GAME.width,GAME.height)}
   ctx.restore();
 }

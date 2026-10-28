@@ -13,24 +13,24 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body {
-  margin: 0; min-height: 100svh; display: flex; justify-content: center; align-items: center; padding: 12px;
+  margin: 0; min-height: 100svh; min-height: 100dvh; display: flex; justify-content: center; align-items: flex-start;
+  padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
   overflow-x: hidden; overscroll-behavior: none; color: var(--cream); font-family: 'Space Grotesk', system-ui, sans-serif;
   background: radial-gradient(circle at 16% 8%, #ff4b9140 0, transparent 28%), radial-gradient(circle at 88% 92%, #38e1d226 0, transparent 32%), linear-gradient(155deg, #271441, var(--night) 58%, #0f172a);
 }
-.shell { width: min(100%, 430px, calc((100svh - 205px) * .66667)); display: flex; flex-direction: column; gap: 9px; }
+.shell { width: min(100%, 520px, calc((100dvh - 178px) * .66667)); display: flex; flex-direction: column; gap: 7px; }
 .topline { display: flex; align-items: center; justify-content: space-between; padding: 0 3px; }
 .fullscreen-toggle { flex-shrink: 0; margin-left: 8px; border: 1px solid #38e1d266; border-radius: 8px; padding: 8px 10px; color: var(--turquoise); background: #173b42; font: 500 9px 'DM Mono', monospace; cursor: pointer; }
 .fullscreen-toggle:hover { border-color: var(--turquoise); background: #205159; }
 .fullscreen-toggle:focus-visible, [data-fullscreen]:focus-visible { outline: 2px solid var(--yellow); outline-offset: 3px; }
 .fullscreen-status { padding: 9px; border: 1px solid #ffe66a66; border-radius: 9px; color: var(--yellow); font-size: 11px; line-height: 1.4; }
-.fullscreen-invite { color: var(--muted); font-size: 10px; line-height: 1.4; }
 :root:fullscreen { overflow-y: auto; background: var(--night); }
 :root:fullscreen body { min-height: 100dvh; }
 :root:-webkit-full-screen { overflow-y: auto; background: var(--night); }
 .brand { color: var(--turquoise); font-size: 13px; font-weight: 800; letter-spacing: .16em; text-shadow: 0 0 16px #38e1d277; }
 .tag, .label, .below, .foot { color: var(--muted); font: 9px 'DM Mono', monospace; letter-spacing: .08em; }
 .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-.stat { min-width: 0; padding: 7px 8px; border: 1px solid #704673aa; border-radius: 11px; background: #291b43de; box-shadow: inset 0 1px #ffffff12; }
+.stat { min-width: 0; padding: 6px 8px; border: 1px solid #704673aa; border-radius: 11px; background: #291b43de; box-shadow: inset 0 1px #ffffff12; }
 .stat-items { border-color: #38e1d299; background: linear-gradient(145deg, #1e494d, #26203e); }
 .value { margin-top: 1px; font-size: 18px; font-weight: 800; white-space: nowrap; }
 .value small { color: var(--muted); font-size: 9px; font-weight: 500; }
@@ -68,28 +68,98 @@ body {
 .share-callout { margin: 10px 0 0; padding: 8px; border-radius: 9px; color: #f6dce9; font: 9px/1.45 'DM Mono', monospace; background: #ff4b911a; }
 .share-callout strong { color: var(--yellow); }
 .hint { margin-top: 11px; color: #c29eb6; font: 8px/1.65 'DM Mono', monospace; }
-.below { display: flex; min-height: 26px; align-items: center; justify-content: space-between; gap: 5px; }
+.below { display: flex; min-height: 24px; align-items: center; justify-content: space-between; gap: 5px; }
 .motto { color: var(--turquoise); }
 .sound { border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; cursor: pointer; color: var(--muted); font: 8px 'DM Mono', monospace; background: #291b43; }
-.controls { display: grid; grid-template: 39px 39px / repeat(3, 1fr); gap: 6px; width: 195px; margin: 0 auto; user-select: none; }
+.controls { display: grid; grid-template: 44px / repeat(4, minmax(54px, 1fr)); gap: 7px; width: min(100%, 310px); margin: 0 auto; user-select: none; }
 .control { border: 1px solid #704673; border-radius: 11px; color: var(--cream); font-size: 18px; cursor: pointer; touch-action: manipulation; background: linear-gradient(145deg, #372247, #21172f); box-shadow: 0 3px 0 #0d0814; }
 .control:active, .control.pressed { border-color: var(--pink); background: #513054; transform: translateY(2px); box-shadow: 0 1px 0 #0d0814; }
-.up { grid-column: 2; }
-.left { grid-column: 1; grid-row: 2; }
-.down { grid-column: 2; grid-row: 2; }
-.right { grid-column: 3; grid-row: 2; }
+.up { grid-column: 2; grid-row: 1; }
+.left { grid-column: 1; grid-row: 1; }
+.down { grid-column: 3; grid-row: 1; }
+.right { grid-column: 4; grid-row: 1; }
 .foot { margin-top: -4px; color: #987a93; text-align: center; font-size: 8px; }
 @media (max-height: 790px) {
-  body { padding: 7px; } .shell { gap: 6px; } .game-wrap canvas { width: 100%; height: auto; }
-  .controls { grid-template-rows: 34px 34px; width: 184px; } .stat { padding: 5px 7px; } .value { font-size: 16px; }
+  body { padding-block: max(5px, env(safe-area-inset-top)) max(5px, env(safe-area-inset-bottom)); } .shell { gap: 5px; } .game-wrap canvas { width: 100%; height: auto; }
+  .controls { grid-template-rows: 40px; width: min(100%, 290px); } .stat { padding: 4px 7px; } .value { font-size: 16px; }
   .gameover-chicken { width: 78px; height: 78px; } .card { padding-top: 13px; } .card h1 { font-size: 34px; }
 }
 @media (max-width: 360px) {
   .tag { display: none; } .stats { gap: 4px; } .stat { padding-inline: 6px; } .value { font-size: 16px; }
 }
 
+@media (max-width: 600px) and (orientation: portrait) {
+  .shell { width: min(100%, calc((100dvh - 178px) * .66667)); }
+  .controls { grid-template-rows: 52px; width: 100%; }
+  .control { font-size: 22px; }
+  .foot { margin-top: 0; }
+}
+
+@media (max-width: 600px) and (min-height: 700px) and (orientation: portrait) {
+  .shell { width: min(100%, 520px); }
+}
+
+/* On wide screens, the game gets the height of the viewport while the compact
+   HUD sits beside it. This makes fullscreen optional rather than necessary. */
+@media (min-width: 900px) and (min-height: 650px) {
+  body { align-items: center; }
+  .shell {
+    width: min(100%, 790px, calc((100dvh - 24px) * .66667 + 230px));
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 220px;
+    grid-template-areas:
+      "game header"
+      "game stats"
+      "game below"
+      "game controls"
+      "game foot";
+    grid-template-rows: auto auto 1fr auto auto;
+    column-gap: 10px;
+  }
+  .topline { grid-area: header; }
+  .stats { grid-area: stats; grid-template-columns: repeat(2, 1fr); }
+  .game-wrap { grid-area: game; align-self: center; }
+  .below { grid-area: below; align-self: end; flex-wrap: wrap; }
+  .controls { grid-area: controls; width: 100%; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: 50px; }
+  .foot { grid-area: foot; margin-top: 0; }
+  .fullscreen-toggle { padding-inline: 7px; }
+}
+
+/* Phone landscape uses the same side-HUD idea at a smaller scale. */
+@media (max-height: 600px) and (orientation: landscape) {
+  body { align-items: center; }
+  .shell {
+    width: min(100%, calc((100dvh - 12px) * .66667 + 210px));
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 200px;
+    grid-template-areas:
+      "game header"
+      "game stats"
+      "game controls"
+      "game below";
+    grid-template-rows: auto auto 1fr auto;
+    gap: 5px 8px;
+  }
+  .game-wrap { grid-area: game; align-self: center; }
+  .topline { grid-area: header; }
+  .brand { font-size: 10px; }
+  .fullscreen-toggle { padding: 5px 6px; font-size: 7px; }
+  .stats { grid-area: stats; grid-template-columns: repeat(2, 1fr); gap: 4px; }
+  .stat { padding: 3px 5px; }
+  .value { font-size: 14px; }
+  .controls { grid-area: controls; align-self: end; width: 100%; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: 44px; gap: 5px; }
+  .below { grid-area: below; min-height: 20px; flex-wrap: wrap; }
+  .below > span:first-child, .foot { display: none; }
+}
+
 .stat-items.goal-complete { border-color: var(--yellow); box-shadow: 0 0 14px #ffe66a33; }
-@media (max-height: 600px) { body { align-items: flex-start; } .shell { width: min(100%, 300px); } }
+@media (max-height: 600px) and (orientation: portrait) {
+  .shell { width: min(100%, calc((100dvh - 180px) * .66667)); }
+  .topline, .below { min-height: 20px; }
+  .fullscreen-toggle { padding-block: 5px; }
+  .controls { grid-template-rows: 44px; }
+  .foot { display: none; }
+}
 @media (prefers-reduced-motion: reduce) { .overlay { transition: none; } }
 
 /* Keep the screenshot result together on typical portrait phone screens. */

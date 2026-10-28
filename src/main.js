@@ -5,12 +5,15 @@ import { renderScene, trafficBounds } from "./renderer.js";
 import { isGrass } from "./terrain.js";
 import { Engine } from "./engine.js";
 import { AudioKit } from "./audio.js";
+import { GameEffects } from "./effects.js";
 import { ui, setRunStats, showReady, showGameOver, showRuntimeError } from "./ui.js";
 const audio = new AudioKit();
 let best = Number(localStorage.getItem("cluckrun-best") || 0);
 ui.best.textContent = best;
 class GameScene {
   constructor() {
+    this.effects = new GameEffects({ reducedMotion: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches || false });
+    this.queuedMove = null;
     this.mode = "ready";
     this.assetsLoaded = typeof Image === "undefined";
     this.elapsed = 0;
@@ -125,7 +128,10 @@ class GameScene {
     this.bankedGrain++;
     this.score++;
     this.showMessage(this.bankedGrain === 16 ? "16 ITENS · DESAFIO CONCLUÍDO!" : `${item.name} · ${this.bankedGrain}/16`);
-    audio.checkpoint();
+    if (this.bankedGrain === 16) {
+      this.effects.celebrate();
+      audio.play("victory");
+    } else audio.checkpoint();
     this.updateScore();
     return true;
   }
@@ -145,7 +151,7 @@ class GameScene {
   checkWater() {
     const row = this.rows.get(this.playerLane);
     if (row?.kind === "water" && (!this.supportingLog(row) || this.playerX < 10 || this.playerX > GAME.width - 10)) {
-      this.die();
+      this.die("splash");
       return false;
     }
     return true;
@@ -185,6 +191,10 @@ class GameScene {
   }
   start() {
     if (!this.assetsLoaded) return;
+    audio.start();
+    syncSoundButton();
+    this.effects.reset();
+    this.queuedMove = null;
     this.runId++;
     this.elapsed = 0;
     this.vehicleIndex = 0;
@@ -220,7 +230,9 @@ class GameScene {
     audio.play("start");
   }
   move(dir) {
-    if (this.mode !== "playing" || this.step) return;
+    if (this.mode !== "playing" || !["up", "down", "left", "right"].includes(dir)) return;
+    // Keep just the latest intent, never a chain of automatic future hops.
+    if (this.step) { this.queuedMove = dir; return; }
     let to = this.playerLane, x = this.playerX;
     if (dir === "up") to++;
     if (dir === "down") to = Math.max(0, to - 1);
@@ -237,7 +249,7 @@ class GameScene {
     this.cooldownDuration = duration;
     this.step = { fromLane: this.playerLane, toLane: to, fromX: this.playerX, toX: x, fromProgress: this.worldProgress, toProgress: to, elapsed: 0, duration, dir, row, drift: this.rows.get(this.playerLane)?.kind === "water" ? this.supportingLog(this.rows.get(this.playerLane))?.speed || 0 : 0 };
     this.playerScale = 1;
-    audio.play("step");
+    audio.play(row.kind === "water" ? "wood" : "step");
   }
   finishStep() {
     const step = this.step;
@@ -251,20 +263,20 @@ class GameScene {
     this.step = null;
     this.cooldown = 0;
     if (!this.checkWater()) return;
+    this.effects.landing(this.playerX, this.playerLane, step.row.kind);
     const advanced = step.dir === "up" && step.toLane > this.furthestLane;
     if (advanced) {
       this.furthestLane = step.toLane;
       this.crossed = this.furthestLane;
       this.score++;
-      if (step.row.kind === "rest" || step.row.kind === "sidewalk") {
-        this.showMessage(step.row.kind === "rest" ? "PONTO SEGURO" : "CALÇADA · SEGURO");
-        audio.checkpoint();
-      }
     }
     const collected = this.collectGrain(step.row);
     if (advanced || step.row.grain?.collected) this.updateScore();
     if (advanced && !(collected && this.bankedGrain === 16)) this.milestone();
     this.pruneRows();
+    const queued = this.queuedMove;
+    this.queuedMove = null;
+    if (queued) this.move(queued);
   }
   updateScore() {
     if (this.score > best) {
@@ -294,12 +306,14 @@ class GameScene {
   collides(row, x, y) {
     return row.cars.some((car) => Math.abs(car.x - x) < car.width * 0.43 + 10 && Math.abs(y - this.laneY(row.lane)) < GAME.laneHeight * 0.43);
   }
-  die() {
+  die(cause = "hit") {
     if (this.mode !== "playing") return;
     this.mode = "dead";
+    this.queuedMove = null;
     this.step = null;
     this.cooldown = 0;
-    audio.play("hit");
+    audio.play(cause);
+    audio.update(this);
     this.cameraShake = 1;
     this.flash = 0.4;
     this.playerRotation = 0;
@@ -325,6 +339,8 @@ class GameScene {
     for (let lane = this.playerLane - GAME.lanesBehind; lane < this.playerLane + GAME.lanesAhead; lane++) this.ensureLane(lane);
   }
   update(delta) {
+    audio.update(this);
+    this.effects.update(delta);
     if (this.mode === "ready" || this.mode === "dead") return;
     this.elapsed += delta;
     this.cooldown = Math.max(0, this.cooldown - delta);
@@ -453,11 +469,19 @@ canvas.addEventListener("pointerup", (event) => {
   else scene.move(dy < 0 ? "up" : "down");
 });
 canvas.addEventListener("pointercancel", () => { touchStart = null; });
-document.querySelector("#sound").addEventListener("click", (event) => {
+function syncSoundButton() {
+  const button = document.querySelector("#sound");
+  button.textContent = `SOM: ${audio.muted ? "DESLIGADO" : "LIGADO"}`;
+  button.setAttribute("aria-pressed", String(!audio.muted));
+}
+document.querySelector("#sound").addEventListener("click", () => {
   audio.setMuted(!audio.muted);
-  event.currentTarget.textContent = `SOM: ${audio.muted ? "DESLIGADO" : "LIGADO"}`;
-  event.currentTarget.setAttribute("aria-pressed", String(!audio.muted));
+  syncSoundButton();
   if (!audio.muted) audio.play("start");
+});
+document.addEventListener?.("visibilitychange", () => {
+  audio.setHidden(document.hidden);
+  if (document.hidden) scene.queuedMove = null;
 });
 ui.start.disabled = true;
 ui.start.textContent = "CARREGANDO ARTES…";

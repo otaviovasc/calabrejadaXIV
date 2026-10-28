@@ -5,7 +5,7 @@ const context=new Proxy({}, {get:(target,key)=>key in target?target[key]:noop,se
 const elements=new Map();
 function element(id){if(!elements.has(id))elements.set(id,{textContent:'',innerHTML:'',style:{},classList:{values:new Set(),add(value){this.values.add(value)},remove(value){this.values.delete(value)},contains(value){return this.values.has(value)}},addEventListener:noop,setAttribute:noop,getBoundingClientRect:()=>({width:430,height:645})});return elements.get(id)}
 const canvas=element('canvas');canvas.parentElement=element('game');canvas.getContext=()=>context;
-globalThis.document={querySelector:selector=>selector==='#game-canvas'?canvas:element(selector),querySelectorAll:()=>[]};
+globalThis.document={addEventListener:noop,querySelector:selector=>selector==='#game-canvas'?canvas:element(selector),querySelectorAll:()=>[]};
 globalThis.window={devicePixelRatio:1,addEventListener:noop};
 globalThis.localStorage={getItem:()=>null,setItem:noop};
 globalThis.requestAnimationFrame=()=>1;
@@ -193,14 +193,14 @@ const {project}=await import('../src/renderer.js');
   assert.ok(texts.includes('META ALCANÇADA!'));assert.ok(texts.includes('16/16'));
   assert.ok(texts.includes('@repnostravamos'));assert.ok(texts.includes('@calabrejadadalarapius'));
   assert.equal(downloads[0],'calabrejada-xvi-16-itens.png');
-  assert.equal(logoSizes.length,3);
+  assert.equal(logoSizes.length,4);
   assert.ok(logoSizes.every(size=>size.height>=180),'download must give the logos a large, readable area');
   assert.ok(drawnImages.some(url=>url.includes('logo-51.png')),'export must include the 51 logo');
   assert.ok(drawnImages.some(url=>url.includes('logo-newage.jpeg')),'export must include the NewAge logo');
-  assert.ok(drawnImages.some(url=>url.includes('logo-nostravamos.png')),'export must include the organizer logo');
+  assert.ok(drawnImages.some(url=>url.includes('rubao-logo.png')),'export must include the organizer logo');
   const {PARTNERS,loadRequiredPartnerImages}=await import('../src/partners.js');
   assert.equal(PARTNERS.length,4,'result must reserve exactly four logo slots');
-  assert.equal(PARTNERS[3].imageUrl,null,'fourth logo slot must initially remain blank');
+  assert.ok(PARTNERS[3].imageUrl.includes('ams-logo.png'),'fourth logo slot must show Amsterdam');
   texts.length=0;globalThis.Image=class{set src(value){queueMicrotask(()=>this.onerror())}};
   await downloadResult({score:20,distance:20,items:15});
   assert.ok(texts.includes('QUASE LÁ!'),'missing art must still allow a correct fallback result');
@@ -321,3 +321,88 @@ console.log('Grass-only tree generation and rendering checks passed.');
   }
 }
 console.log('Vehicle checks passed: smooth lane speeds, invisible recycling, continuous animation and rim placement.');
+
+// Audio follows the projected sprites, rather than unprojected lane coordinates.
+{
+  const {vehicleSoundPosition}=await import('../src/audio-space.js');
+  const game={playerX:180,worldProgress:10};
+  const car={x:80,lane:10,speed:80};
+  const left=vehicleSoundPosition(car,game);
+  const right=vehicleSoundPosition({...car,x:280},game);
+  assert.ok(left.pan<0 && right.pan>0,'stereo must follow screen position');
+  assert.ok(left.approaching && !right.approaching,'approach must follow vehicle direction');
+  assert.ok(left.pitch>1 && right.pitch<1,'passing vehicles must shift gently down in pitch');
+  const near=vehicleSoundPosition({...car,x:180},game);
+  const far=vehicleSoundPosition({...car,x:180,lane:15},game);
+  const offscreen=vehicleSoundPosition({...car,x:-500},game);
+  assert.ok(near.level>far.level,'distant lanes must be quieter');
+  assert.equal(offscreen.level,0,'fully offscreen vehicles must fade out');
+  const diagonal=vehicleSoundPosition({...car,x:180,lane:13},game);
+  assert.ok(diagonal.pan>0,'audio must respect the camera diagonal');
+}
+console.log('Spatial audio checks passed: stereo, proximity, approach, pitch and offscreen fade.');
+
+// Buffer one latest intent, validate it at landing, and clear it on death/reset.
+{
+  function safeGame(){
+    const game=new GameScene();game.attach(new Engine(canvas,game,360,540));game.start();game.cars=[];
+    for(let lane=0;lane<=5;lane++)game.rows.set(lane,{lane,kind:'sidewalk',cars:[],logs:[],trees:[],grain:null});
+    return game;
+  }
+  const game=safeGame();game.move('up');
+  for(let i=0;i<8;i++)game.move('right');
+  assert.equal(game.playerLane,0,'buffering must not skip the current hop');
+  for(let i=0;i<20;i++)game.update(.015);
+  assert.equal(game.playerLane,1);assert.equal(game.playerX,228,'one buffered side step must execute');
+  assert.equal(game.step,null);assert.equal(game.queuedMove,null,'extra taps must not build a movement chain');
+  game.move('up');game.move('left');game.move('right');
+  for(let i=0;i<20;i++)game.update(.015);
+  assert.equal(game.playerX,276,'latest direction must win');
+  const blocked=safeGame();blocked.rows.get(1).trees=[{x:228}];
+  blocked.move('up');blocked.move('right');
+  for(let i=0;i<20;i++)blocked.update(.015);
+  assert.equal(blocked.playerX,180,'queued movement must still respect trees');
+  assert.equal(blocked.queuedMove,null);
+  const dead=safeGame();dead.move('up');dead.move('right');dead.die();
+  assert.equal(dead.queuedMove,null,'death must discard buffered input');
+  dead.start();assert.equal(dead.queuedMove,null);assert.equal(dead.step,null);
+  const {game:water,river}=riverScene();river.logs=[];
+  water.move('up');water.move('down');
+  for(let i=0;i<10;i++)water.update(.015);
+  assert.equal(water.mode,'dead','buffered escape must not bypass drowning');
+  assert.equal(water.queuedMove,null);
+}
+console.log('Input buffer checks passed: one intent, latest direction, obstacles, drowning, death and restart.');
+
+{
+  const {GameEffects}=await import('../src/effects.js');
+  const game=new GameScene();game.attach(new Engine(canvas,game,360,540));game.start();game.cars=[];
+  game.bankedGrain=15;
+  const row={lane:1,kind:'rest',cars:[],logs:[],trees:[],grain:{x:180,collected:false,type:0}};
+  game.rows.set(1,row);completeMove(game,'up');
+  assert.equal(game.bankedGrain,16);
+  assert.ok(game.effects.celebrationRemaining>0,'16th pickup must trigger celebration');
+  assert.equal(game.mode,'playing','celebration must leave the game playable');
+  assert.ok(game.effects.particles.some(p=>p.kind==='dust'),'landings must produce dust');
+  assert.ok(game.effects.particles.some(p=>p.kind==='confetti'),'goal must emit confetti');
+  const remaining=game.effects.celebrationRemaining;
+  game.collectGrain(row);assert.equal(game.effects.celebrationRemaining,remaining,'revisits must not restart celebration');
+  const next={...row,lane:2,grain:{x:180,collected:false,type:0}};
+  game.collectGrain(next);assert.equal(game.effects.celebrationRemaining,remaining,'17th item must not restart celebration');
+  const texts=[];
+  const recording=new Proxy(context,{get(target,key){return key==='fillText'?(text)=>texts.push(text):target[key]}});
+  game.draw(recording);assert.ok(texts.includes('16 ITENS!'),'renderer must paint the celebration banner');
+  game.start();assert.equal(game.effects.celebrationRemaining,0);assert.equal(game.effects.particles.length,0);
+  const {game:rider}=riverScene();completeMove(rider,'up');
+  assert.ok(rider.effects.particles.some(p=>p.kind==='splash'),'safe log landing must create droplets');
+  assert.ok(rider.effects.particles.some(p=>p.kind==='ripple'),'safe log landing must create a ripple');
+  const effects=new GameEffects();
+  for(let i=0;i<100;i++)effects.landing(180,0,'water');
+  assert.ok(effects.particles.length<=96,'particle count must stay bounded');
+  effects.celebrate();effects.update(3);
+  assert.equal(effects.particles.length,0);assert.equal(effects.celebrationRemaining,0);
+  const reduced=new GameEffects({reducedMotion:true});reduced.landing(180,0,'water');reduced.celebrate();
+  assert.equal(reduced.particles.length,0,'reduced motion must suppress moving particles');
+  assert.ok(reduced.celebrationRemaining>0,'reduced motion must retain the goal banner');
+}
+console.log('Feedback checks passed: 16-item celebration, continued play, rendering, dust, splashes, reset, limits and reduced motion.');

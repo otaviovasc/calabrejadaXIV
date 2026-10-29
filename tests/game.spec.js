@@ -3,6 +3,8 @@ import {test,expect} from '@playwright/test';
 test('renders the game, starts a run, advances score, and toggles sound',async({page})=>{
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
   await page.goto('/');
+  await page.locator('#nickname').fill('Galinho');
+  await page.locator('#nickname').blur();
   await expect(page.locator('#game canvas')).toBeVisible();
   await expect(page.locator('#overlay')).toBeVisible();
   await page.getByRole('button',{name:/vamos atravessar/i}).click();
@@ -19,6 +21,8 @@ test('renders the game, starts a run, advances score, and toggles sound',async({
 
 test('a rapid second command is buffered once and executes after landing',async({page})=>{
   await page.goto('/');
+  await page.locator('#nickname').fill('Galinho');
+  await page.locator('#nickname').blur();
   await page.getByRole('button',{name:/vamos atravessar/i}).click();
   await page.evaluate(()=>{
     for(let i=0;i<5;i++) window.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true}));
@@ -31,6 +35,8 @@ test('a rapid second command is buffered once and executes after landing',async(
 
 test('arrow key starts the game and immediately moves one tile',async({page})=>{
   await page.goto('/');
+  await page.locator('#nickname').fill('Galinho');
+  await page.locator('#nickname').blur();
   await page.keyboard.press('ArrowUp');
   await expect(page.locator('#distance')).toHaveText('1');
   await expect(page.locator('#score')).toHaveText('1');
@@ -38,6 +44,8 @@ test('arrow key starts the game and immediately moves one tile',async({page})=>{
 
 test('start button enters the playing state and allows movement',async({page})=>{
   await page.goto('/');
+  await page.locator('#nickname').fill('Galinho');
+  await page.locator('#nickname').blur();
   await page.getByRole('button',{name:/vamos atravessar/i}).click();
   await page.keyboard.press('ArrowUp');
   await expect(page.locator('#distance')).toHaveText('1');
@@ -46,6 +54,8 @@ test('start button enters the playing state and allows movement',async({page})=>
 
 test('opening traffic leaves enough time for the first two forward steps',async({page})=>{
   await page.goto('/');
+  await page.locator('#nickname').fill('Galinho');
+  await page.locator('#nickname').blur();
   await page.keyboard.press('ArrowUp');
   await expect(page.locator('#distance')).toHaveText('1');
   await page.waitForTimeout(140);
@@ -56,6 +66,8 @@ test('opening traffic leaves enough time for the first two forward steps',async(
 
 test('side steps and backing up do not add score',async({page})=>{
   await page.goto('/');
+  await page.locator('#nickname').fill('Galinho');
+  await page.locator('#nickname').blur();
   await page.getByRole('button',{name:/vamos atravessar/i}).click();
   await page.keyboard.press('ArrowRight');
   await page.waitForTimeout(190);
@@ -68,6 +80,8 @@ test('side steps and backing up do not add score',async({page})=>{
 test('touch control advances the player on mobile',async({page},testInfo)=>{
   test.skip(!testInfo.project.use.isMobile,'mobile project only');
   await page.goto('/');
+  await page.locator('#nickname').fill('Galinho');
+  await page.locator('#nickname').blur();
   await page.getByRole('button',{name:/vamos atravessar/i}).tap();
   await page.getByRole('button',{name:'Avançar'}).tap();
   await expect(page.locator('#distance')).toHaveText('1');
@@ -77,6 +91,8 @@ for (const items of [15,16,17]) {
   test(`death result uses ${items} actual collected items and exports a Story`,async({page})=>{
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     await page.goto('/');
+  await page.locator('#nickname').fill('Galinho');
+  await page.locator('#nickname').blur();
     await expect(page.getByRole('button',{name:/vamos atravessar/i})).toBeEnabled();
     await page.evaluate(async count=>{
       const {GameScene}=await import('/src/main.js');
@@ -115,6 +131,8 @@ test('mandatory sponsor image failure blocks export and can be retried',async({p
   const logoPattern='**/logo-51.png*';
   await page.route(logoPattern,route=>route.abort());
   await page.goto('/');
+  await page.locator('#nickname').fill('Galinho');
+  await page.locator('#nickname').blur();
   await expect(page.getByRole('button',{name:/vamos atravessar/i})).toBeEnabled();
   await page.evaluate(async()=>{
     const {GameScene}=await import('/src/main.js');
@@ -140,6 +158,8 @@ test('soundtrack loops, respects mute on restart, and pauses in background', asy
     };
   });
   await page.goto('/');
+  await page.locator('#nickname').fill('Galinho');
+  await page.locator('#nickname').blur();
   await page.getByRole('button', {name: /vamos atravessar/i}).click();
   await expect.poll(() => page.evaluate(() => Boolean(window.__soundtrack?.loop && !window.__soundtrack.paused && window.__soundtrack.currentTime > 0))).toBe(true);
   await page.getByRole('button', {name: 'SOM: LIGADO'}).click();
@@ -168,6 +188,8 @@ for (const [width, height] of [[320,568], [390,664], [430,932], [844,390], [1440
   test(`game fits viewport ${width}x${height} with reachable controls`, async ({page}) => {
     await page.setViewportSize({width,height});
     await page.goto('/');
+  await page.locator('#nickname').fill('Galinho');
+  await page.locator('#nickname').blur();
     await page.getByRole('button', {name:/vamos atravessar/i}).click();
     const canvas = await page.locator('#game-canvas').boundingBox();
     const controls = await page.locator('.controls').boundingBox();
@@ -182,6 +204,8 @@ for (const [width, height] of [[320,568], [390,664], [430,932], [844,390], [1440
 
 test('individual vehicle voices pan across screen and horns have a cooldown', async ({page}) => {
   await page.goto('/');
+  await page.locator('#nickname').fill('Galinho');
+  await page.locator('#nickname').blur();
   await page.getByRole('button',{name:/vamos atravessar/i}).click();
   const result=await page.evaluate(async()=>{
     const {AudioKit}=await import('/src/audio.js');
@@ -216,6 +240,8 @@ test('goal celebration renders during play and respects reduced motion', async (
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
   await page.emulateMedia({reducedMotion:'reduce'});
   await page.goto('/');
+  await page.locator('#nickname').fill('Galinho');
+  await page.locator('#nickname').blur();
   await page.getByRole('button',{name:/vamos atravessar/i}).click();
   const result=await page.evaluate(async()=>{
     const {GameScene}=await import('/src/main.js');
@@ -236,4 +262,43 @@ test('goal celebration renders during play and respects reduced motion', async (
   await expect(page.locator('#overlay')).toHaveClass(/hidden/);
   await expect(page.locator('#items')).toHaveText('16');
   expect(errors).toEqual([]);
+});
+
+
+test('opening requires a nickname and preserves identity in the death result',async({page})=>{
+  await page.goto('/');
+  await expect(page.locator('#intro-prize')).toContainText('concorrer a um ingresso');
+  await expect(page.locator('#intro-prize')).toContainText('@repnostravamos');
+  await expect(page.locator('#intro-prize')).toContainText('@calabrejadadalarapius');
+  await page.getByRole('button',{name:/vamos atravessar/i}).click();
+  await expect(page.locator('#overlay')).not.toHaveClass(/hidden/);
+  await page.locator('#nickname').fill('   ');
+  await page.locator('#nickname').blur();
+  await page.keyboard.press('ArrowUp');
+  await expect(page.locator('#distance')).toHaveText('0');
+  await page.locator('#nickname').fill('Pintinho');
+  await page.locator('#republic').fill('República Exemplo');
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.locator('#overlay')).not.toHaveClass(/hidden/);
+  await page.locator('#republic').press('Enter');
+  await expect(page.locator('#overlay')).toHaveClass(/hidden/);
+  await page.evaluate(async()=>{const {showGameOver}=await import('/src/ui.js');showGameOver(32,20,16)});
+  await expect(page.locator('#result-nickname')).toHaveText('Pintinho');
+  await expect(page.locator('#result-republic')).toHaveText('República Exemplo');
+  await expect(page.locator('#gameover-chicken')).toBeVisible();
+  await expect(page.locator('#share-callout')).toContainText('concorrer a um ingresso');
+  await page.getByRole('button',{name:/jogar de novo/i}).click();
+  await page.evaluate(async()=>{const {showGameOver}=await import('/src/ui.js');showGameOver(2,2,0)});
+  await expect(page.locator('#result-nickname')).toHaveText('Pintinho');
+});
+
+test('republic is optional and player text is rendered safely',async({page})=>{
+  await page.goto('/');
+  await page.locator('#nickname').fill('<b>Galinho</b>');
+  await page.getByRole('button',{name:/vamos atravessar/i}).click();
+  await expect(page.locator('#overlay')).toHaveClass(/hidden/);
+  await page.evaluate(async()=>{const {showGameOver}=await import('/src/ui.js');showGameOver(0,0,0)});
+  await expect(page.locator('#result-nickname')).toHaveText('<b>Galinho</b>');
+  await expect(page.locator('#result-nickname b')).toHaveCount(0);
+  await expect(page.locator('#result-republic')).toBeHidden();
 });

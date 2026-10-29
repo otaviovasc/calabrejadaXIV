@@ -4,6 +4,7 @@ const noop=()=>{};
 const context=new Proxy({}, {get:(target,key)=>key in target?target[key]:noop,set:(target,key,value)=>(target[key]=value,true)});
 const elements=new Map();
 function element(id){if(!elements.has(id))elements.set(id,{textContent:'',innerHTML:'',style:{},classList:{values:new Set(),add(value){this.values.add(value)},remove(value){this.values.delete(value)},contains(value){return this.values.has(value)}},addEventListener:noop,setAttribute:noop,getBoundingClientRect:()=>({width:430,height:645})});return elements.get(id)}
+element('#nickname').value='Teste';element('#republic').value='República Teste';element('#nickname').setCustomValidity=noop;element('#player-form').reportValidity=()=>true;
 const canvas=element('canvas');canvas.parentElement=element('game');canvas.getContext=()=>context;
 globalThis.document={addEventListener:noop,querySelector:selector=>selector==='#game-canvas'?canvas:element(selector),querySelectorAll:()=>[]};
 globalThis.window={devicePixelRatio:1,addEventListener:noop};
@@ -189,7 +190,8 @@ const {project}=await import('../src/renderer.js');
   document.createElement=tag=>tag==='canvas'?{getContext:()=>exportContext,toBlob:callback=>callback(new Blob(['test'],{type:'image/png'}))}:{click(){downloads.push(this.download)}};
   globalThis.Image=class{naturalWidth=1080;naturalHeight=1920;set src(value){this.url=value;queueMicrotask(()=>this.onload())}};
   const {downloadResult}=await import('../src/share.js');
-  await downloadResult({score:33,distance:17,items:16});
+  await downloadResult({score:33,distance:17,items:16,nickname:'Galinho',republic:'República Teste'});
+  assert.ok(texts.includes('Galinho'));assert.ok(texts.includes('República Teste'));
   assert.ok(texts.includes('META ALCANÇADA!'));assert.ok(texts.includes('16/16'));
   assert.ok(texts.includes('@repnostravamos'));assert.ok(texts.includes('@calabrejadadalarapius'));
   assert.equal(downloads[0],'calabrejada-xvi-16-itens.png');

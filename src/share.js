@@ -33,9 +33,9 @@ function roundedRect(ctx,x,y,width,height,radius,fill,stroke){
   if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=3;ctx.stroke()}
 }
 
-function centeredText(ctx,text,y,font,color){ctx.font=font;ctx.fillStyle=color;ctx.textAlign='center';ctx.fillText(text,WIDTH/2,y)}
+function centeredText(ctx,text,y,font,color){ctx.font=font;ctx.fillStyle=color;ctx.textAlign='center';ctx.fillText(text,WIDTH/2,y,900)}
 
-export async function downloadResult({score=0,distance=0,items=0}={}){
+export async function downloadResult({score=0,distance=0,items=0,nickname='',republic=''}={}){
   if(!globalThis.document?.createElement)throw new Error('Download indisponível neste navegador');
   await document.fonts?.ready;
   const canvas=document.createElement('canvas');canvas.width=WIDTH;canvas.height=HEIGHT;
@@ -58,8 +58,11 @@ export async function downloadResult({score=0,distance=0,items=0}={}){
   centeredText(ctx,reached?'META ALCANÇADA!':'QUASE LÁ!',650,'800 82px "Space Grotesk", sans-serif',reached?'#38e1d2':'#ffcf55');
   centeredText(ctx,reached?'Você coletou 16 ou mais itens na mesma partida.':`Faltaram ${GOAL-items} ${GOAL-items===1?'item':'itens'} para a meta simbólica.`,710,'500 29px "Space Grotesk", sans-serif','#fff4d6');
 
+  centeredText(ctx,nickname,747,'700 30px "Space Grotesk", sans-serif','#ffe66a');
+  if(republic)centeredText(ctx,republic,783,'500 25px "Space Grotesk", sans-serif','#fff4d6');
+
   const boxes=[{x:95,label:'ITENS',value:`${items}/16`,accent:reached?'#38e1d2':'#ffe66a'},{x:385,label:'CASAS',value:String(distance),accent:'#fff4d6'},{x:675,label:'PONTOS',value:String(score),accent:'#fff4d6'}];
-  for(const box of boxes){roundedRect(ctx,box.x,775,250,150,34,'rgba(24,12,43,.88)','rgba(255,255,255,.18)');ctx.textAlign='center';ctx.fillStyle=box.accent;ctx.font='800 64px "Space Grotesk", sans-serif';ctx.fillText(box.value,box.x+125,845);ctx.fillStyle='#dcb9cf';ctx.font='500 24px "DM Mono", monospace';ctx.fillText(box.label,box.x+125,895)}
+  for(const box of boxes){roundedRect(ctx,box.x,805,250,135,34,'rgba(24,12,43,.88)','rgba(255,255,255,.18)');ctx.textAlign='center';ctx.fillStyle=box.accent;ctx.font='800 64px "Space Grotesk", sans-serif';ctx.fillText(box.value,box.x+125,865);ctx.fillStyle='#dcb9cf';ctx.font='500 24px "DM Mono", monospace';ctx.fillText(box.label,box.x+125,915)}
 
   centeredText(ctx,PARTNER_HEADING,995,'500 22px "DM Mono", monospace','#f4dbe8');
   const partnerById=new Map(partnerImages.map(entry=>[entry.partner.id,entry.image]));
@@ -74,10 +77,10 @@ export async function downloadResult({score=0,distance=0,items=0}={}){
 
   roundedRect(ctx,90,1530,900,265,38,'rgba(23,12,42,.9)',reached?'#38e1d2':'#ff4b91');
   centeredText(ctx,'AGORA É COM VOCÊ',1595,'800 42px "Space Grotesk", sans-serif','#fff4d6');
-  centeredText(ctx,'Poste este resultado no Instagram e marque:',1650,'500 27px "Space Grotesk", sans-serif','#f4dbe8');
+  centeredText(ctx,reached?'Poste para concorrer ao ingresso da Calabrejada:':'Chegue a 16 itens e poste marcando:',1650,'500 27px "Space Grotesk", sans-serif','#f4dbe8');
   centeredText(ctx,'@repnostravamos',1710,'800 36px "Space Grotesk", sans-serif','#ffe66a');
   centeredText(ctx,'@calabrejadadalarapius',1765,'800 36px "Space Grotesk", sans-serif','#ffe66a');
-  centeredText(ctx,'Conclusão simbólica · evento +18',1820,'500 23px "DM Mono", monospace','#dcb9cf');
+  centeredText(ctx,'CALABREJADA XVI · EVENTO +18',1820,'500 23px "DM Mono", monospace','#dcb9cf');
   centeredText(ctx,'BEBA COM MODERAÇÃO',1862,'500 21px "DM Mono", monospace','#dcb9cf');
 
   const blob=canvas.toBlob?await new Promise(resolve=>canvas.toBlob(resolve,'image/png')):null;

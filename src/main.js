@@ -6,7 +6,7 @@ import { isGrass } from "./terrain.js";
 import { Engine } from "./engine.js";
 import { AudioKit } from "./audio.js";
 import { GameEffects } from "./effects.js";
-import { ui, setRunStats, showReady, showGameOver, showRuntimeError } from "./ui.js";
+import { ui, capturePlayer, setRunStats, showReady, showGameOver, showRuntimeError } from "./ui.js";
 const audio = new AudioKit();
 let best = Number(localStorage.getItem("cluckrun-best") || 0);
 ui.best.textContent = best;
@@ -190,7 +190,7 @@ class GameScene {
     }
   }
   start() {
-    if (!this.assetsLoaded) return;
+    if (!this.assetsLoaded || !capturePlayer()) return;
     audio.start();
     syncSoundButton();
     this.effects.reset();
@@ -387,7 +387,7 @@ class GameScene {
     renderScene(ctx, this);
   }
   onKey(event) {
-    if (!this.assetsLoaded || event.target?.matches?.("button:not([data-move]),a,input,textarea") && (event.key === "Enter" || event.key === " ")) return;
+    if (event.target?.matches?.("input,textarea,select") || !this.assetsLoaded || event.target?.matches?.("button:not([data-move]),a") && (event.key === "Enter" || event.key === " ")) return;
     const dir = INPUT.keys[event.key];
     if (dir) {
       event.preventDefault();
@@ -436,7 +436,7 @@ async function toggleFullscreen() {
 scene.onError = showRuntimeError;
 scene.attach(engine);
 engine.start();
-ui.start.addEventListener("click", () => scene.start());
+ui.form.addEventListener("submit", (event) => { event.preventDefault(); scene.start(); });
 fullscreenButtons.forEach((button) => button.addEventListener("click", toggleFullscreen));
 document.addEventListener("fullscreenchange", updateFullscreenButtons);
 document.addEventListener("webkitfullscreenchange", updateFullscreenButtons);

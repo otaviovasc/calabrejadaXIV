@@ -2,9 +2,12 @@ import {downloadResult} from './share.js';
 import {PARTNERS,loadRequiredPartnerImages} from './partners.js';
 
 const GOAL=16;
+let player={nickname:'',republic:''};
 let currentResult={score:0,distance:0,items:0};
 
 export const ui={
+  form:document.querySelector('#player-form'),nickname:document.querySelector('#nickname'),republic:document.querySelector('#republic'),introPrize:document.querySelector('#intro-prize'),
+  resultPlayer:document.querySelector('#result-player'),resultNickname:document.querySelector('#result-nickname'),resultRepublic:document.querySelector('#result-republic'),shareInstruction:document.querySelector('#share-instruction'),
   score:document.querySelector('#score'),best:document.querySelector('#best'),distance:document.querySelector('#distance'),items:document.querySelector('#items'),
   overlay:document.querySelector('#overlay'),start:document.querySelector('#start'),overline:document.querySelector('#overline'),headline:document.querySelector('#headline'),description:document.querySelector('#description'),
   card:document.querySelector('#result-card'),chicken:document.querySelector('#gameover-chicken'),resultStats:document.querySelector('#result-stats'),
@@ -51,22 +54,36 @@ export function setRunStats(score,best,distance,items=0){
   ui.items.closest?.('.stat-items')?.classList.toggle('goal-complete',items>=GOAL);
 }
 
+export function capturePlayer(){
+  const nickname=(ui.nickname.value||'').trim();
+  ui.nickname.setCustomValidity(nickname?'':'Preencha seu apelido para jogar.');
+  if(!ui.form.reportValidity())return false;
+  player={nickname,republic:(ui.republic.value||'').trim()};
+  ui.nickname.value=nickname;
+  return true;
+}
+ui.nickname.addEventListener('input',()=>ui.nickname.setCustomValidity(''));
+
 export function showReady(){
   currentResult={score:0,distance:0,items:0};
   ui.overline.textContent='CALABREJADA · EDIÇÃO XVI';
   ui.headline.innerHTML='PEGUE<br>16 ITENS.';
-  ui.description.textContent='Atravesse a festa, colete os itens e faça a sua melhor marca.';
+  ui.description.textContent='Atravesse as ruas e os rios sem ser atingido nem cair na água. Colete 16 itens na mesma partida!';
+  ui.form.hidden=true;ui.introPrize.hidden=true;ui.resultPlayer.hidden=true;
   ui.start.textContent='VAMOS ATRAVESSAR →';
   ui.card.classList.remove('goal-reached');ui.card.classList.remove('result-visible');ui.chicken.hidden=true;ui.resultStats.hidden=true;ui.partners.hidden=true;ui.shareCallout.hidden=true;ui.download.hidden=true;
   ui.overlay.classList.remove('result-overlay');ui.overlay.inert=true;ui.overlay.classList.add('hidden');
 }
 
 export function showGameOver(score,distance,items=0){
-  currentResult={score,distance,items};
+  currentResult={score,distance,items,...player};
+  ui.form.hidden=true;ui.introPrize.hidden=true;ui.resultPlayer.hidden=false;
+  ui.resultNickname.textContent=player.nickname;ui.resultRepublic.textContent=player.republic;ui.resultRepublic.hidden=!player.republic;
   const reached=items>=GOAL,remaining=Math.max(0,GOAL-items);
-  ui.overline.textContent=`FIM DE JOGO · ${distance} CASAS`;
-  ui.headline.innerHTML=reached?'META<br>ALCANÇADA!':`${items}/16<br>ITENS`;
-  ui.description.textContent=reached?'Sua meta de 16 itens está concluída!':`Faltaram ${remaining} ${remaining===1?'item':'itens'}. Bora tentar de novo?`;
+  ui.overline.textContent='FIM DE JOGO · CALABREJADA XVI';
+  ui.headline.innerHTML=reached?'META<br>ALCANÇADA!':'DEU RUIM<br>NA TRAVESSIA!';
+  ui.description.textContent=reached?'Meta de 16 itens alcançada! Poste para concorrer ao ingresso.':`Faltaram ${remaining} ${remaining===1?'item':'itens'}. Bora tentar de novo?`;
+  ui.shareInstruction.textContent=reached?'Você bateu a meta! Poste este resultado no Instagram para concorrer a um ingresso da Calabrejada e marque:':'Chegue a 16 itens na mesma partida para concorrer a um ingresso da Calabrejada. Depois, poste o resultado marcando:';
   ui.resultItems.textContent=`${items}/16`;ui.resultDistance.textContent=distance;ui.resultScore.textContent=score;
   ui.start.textContent='JOGAR DE NOVO →';
   ui.overlay.classList.add('result-overlay');

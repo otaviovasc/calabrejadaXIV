@@ -18,6 +18,7 @@ export const ui={
     '51':document.querySelector('#partner-logo-51'),
     'new-age':document.querySelector('#partner-logo-new-age'),
     rubao:document.querySelector('#partner-logo-rubao'),
+    vibra:document.querySelector('#partner-logo-vibra'),
     future:document.querySelector('#partner-logo-future')
   }
 };

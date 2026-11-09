@@ -66,13 +66,15 @@ export async function downloadResult({score=0,distance=0,items=0,nickname='',rep
 
   centeredText(ctx,PARTNER_HEADING,995,'500 22px "DM Mono", monospace','#f4dbe8');
   const partnerById=new Map(partnerImages.map(entry=>[entry.partner.id,entry.image]));
-  const slotWidth=430,slotHeight=216,slotGap=24,slotStart=98;
+  const slotWidth=430,slotHeight=140,slotGap=24,slotStart=98;
   for(const [index,partner] of PARTNERS.entries()){
-    const x=slotStart+(index%2)*(slotWidth+slotGap);
+    const wide=index===PARTNERS.length-1;
+    const width=wide?slotWidth*2+slotGap:slotWidth;
+    const x=slotStart+(wide?0:index%2)*(slotWidth+slotGap);
     const y=1035+Math.floor(index/2)*(slotHeight+slotGap);
-    roundedRect(ctx,x,y,slotWidth,slotHeight,20,'#ffffff','rgba(255,255,255,.62)');
+    roundedRect(ctx,x,y,width,slotHeight,20,'#ffffff','rgba(255,255,255,.62)');
     const image=partnerById.get(partner.id);
-    if(image)contain(ctx,image,x,y,slotWidth,slotHeight,12);
+    if(image)contain(ctx,image,x,y,width,slotHeight,12);
   }
 
   roundedRect(ctx,90,1530,900,265,38,'rgba(23,12,42,.9)',reached?'#38e1d2':'#ff4b91');

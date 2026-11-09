@@ -23,12 +23,13 @@ export const PARTNERS=[
     required:true
   },
   {
-    id:'Amsterdam',
+    id:'future',
     name:'Amsterdam',
     alt:'Logo da Amsterdam',
     imageUrl:new URL('../assets/optimized/ams-logo.png',import.meta.url).href,
     required:true
   }
+  ,{id:'vibra',name:'Vibra Festas',alt:'Logo da Vibra Festas — som profissional',imageUrl:new URL('../assets/vibra-festas-logo.png',import.meta.url).href,required:true}
 ];
 
 let cachedRequiredImages;

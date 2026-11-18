@@ -108,10 +108,16 @@ class GameScene {
     return { speed: Math.min(58, 24 + progress * 0.22), width: Math.max(100, 148 - progress * 0.28), gap: Math.min(66, 42 + progress * 0.12), maxRows: lane < 35 ? 1 : lane < 80 ? 2 : 3 };
   }
   createLogs(row) {
-    const difficulty = this.riverDifficulty(row.lane), direction = this.random() < 0.5 ? 1 : -1, spacing = difficulty.width + difficulty.gap, count = Math.ceil(GAME.width / spacing) + 2, phase = this.random() * spacing;
+    // Adjacent log rows must move in opposite directions: with equal speed and spacing, two rows
+    // drifting the same way keep a frozen relative offset, which can make a crossing impossible forever.
+    const previous = this.rows.get(row.lane - 1);
+    // Per-row variety that only ever makes things easier or neutral: speed 0.8x–1.1x, logs up to 36px longer.
+    const difficulty = this.riverDifficulty(row.lane), direction = previous?.kind === "water" ? -Math.sign(previous.logSpeed) : this.random() < 0.5 ? 1 : -1;
+    const width = difficulty.width + Math.round(this.random() * 36), speed = difficulty.speed * (0.8 + this.random() * 0.3);
+    const spacing = width + difficulty.gap, count = Math.ceil(GAME.width / spacing) + 2, phase = this.random() * spacing;
     row.logCycle = count * spacing;
-    row.logSpeed = direction * difficulty.speed;
-    for (let i = 0; i < count; i++) row.logs.push({ x: -spacing + phase + i * spacing, width: difficulty.width, speed: row.logSpeed });
+    row.logSpeed = direction * speed;
+    for (let i = 0; i < count; i++) row.logs.push({ x: -spacing + phase + i * spacing, width, speed: row.logSpeed });
     if (this.random() < LANE_PATTERN.river.grainChance) {
       const log = row.logs[Math.floor(this.random() * row.logs.length)];
       row.grain = { x: log.x, log, collected: false };
